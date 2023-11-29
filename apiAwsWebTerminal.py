@@ -5,7 +5,7 @@ import mysql.connector
 import pyodbc
 
 connection = mysql.connector.connect(
-        host='localhost',
+        host='127.0.0.1',
         database='streamoon',
         user='StreamoonUser',
         password='Moon2023'
