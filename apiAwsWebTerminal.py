@@ -12,8 +12,8 @@ connection = mysql.connector.connect(
     )
 
 connectionSQLServer = pyodbc.connect(
-            'DRIVER={SQL Server};'
-            'SERVER=127.0.0.1;'
+            'DRIVER={ODBC Driver 18 for SQL Server};'
+            'SERVER=18.208.1.120;'
             'DATABASE=streamoon;'
             'UID=StreamoonUser;'
             'PWD=Moon2023;'
@@ -64,9 +64,9 @@ def execute_command(command: str):
 # Conexão com o banco 
 
 def selectDB():
-    mySql_select = f"SELECT * FROM terminal WHERE fkServidor = {idServidor} AND retorno IS NULL ORDER BY idTerminal DESC LIMIT 1;"
+    mySql_select = f"SELECT TOP 1 * FROM terminal WHERE fkServidor = {idServidor} AND retorno IS NULL ORDER BY idTerminal DESC;"
 
-    cursor = connection.cursor()
+    cursor = connectionSQLServer.cursor()
 
     cursor.execute(mySql_select)
 
@@ -81,14 +81,19 @@ def selectDB():
 
         updateDB(saida_comando, lastID)
         updateDBSQLServer(saida_comando, lastID)
-    connection.commit()
+    connectionSQLServer.commit()
     cursor.close()
     
 
 
 def updateDB(saida_comando, lastId):
-    saida_comando = saida_comando.decode('utf-8').replace('\"', "\'")
-    mySql_update = f"UPDATE terminal set retorno = \"{saida_comando}\" WHERE idTerminal = {lastId}"
+    saida_comando_tratado = ""
+    try:
+        saida_comando_tratado = saida_comando.decode('utf-8').replace('\"', "\'")
+    except:
+        saida_comando_tratado = saida_comando.replace('\"', "\'")
+
+    mySql_update = f"UPDATE terminal set retorno = \"{saida_comando_tratado}\" WHERE idTerminal = {lastId}"
 
     cursor = connection.cursor()
     cursor.execute(mySql_update)
@@ -98,9 +103,15 @@ def updateDB(saida_comando, lastId):
 
 
 def updateDBSQLServer(saida_comando, lastId):
-    saida_comando = saida_comando.decode('utf-8').replace('\"', "\'")
-    mySql_update = f"UPDATE terminal set retorno = \"{saida_comando}\" WHERE idTerminal = {lastId}"
+    saida_comando_tratado = ""
+    try:
+        saida_comando_tratado = saida_comando.decode('utf-8').replace('\'', "\"")
+    except:
+        saida_comando_tratado = saida_comando.replace('\'', "\"")
 
+    mySql_update = f"UPDATE terminal set retorno = \'{saida_comando_tratado}\' WHERE idTerminal = {lastId}"
+
+    print(mySql_update)
     cursor = connectionSQLServer.cursor()
     cursor.execute(mySql_update)
 
